@@ -62,7 +62,7 @@
             android:layout_height="match_parent">
 
             <TextView
-                android:id="@+id/date_tv"
+                android:id="@+id/note_date_textView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="30dp"
