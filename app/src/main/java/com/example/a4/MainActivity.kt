@@ -15,31 +15,28 @@ import android.util.Log
 import android.view.Menu
 import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main3.*
 import java.util.*
 
 class MainActivity : AppCompatActivity(), SearchView.OnCloseListener {
-    var adaptor: Adaptor? = null
-    var dataClass: DataClass? = null
-    var dbHelper: DbHelper? = null
+    lateinit var adaptor: Adaptor
+    lateinit var notesDataClass: Notes
+    lateinit var dbHelper: DbHelper
     var sortMode = DbHelper.COLUMN_ID + " DESC"
     var searchView: SearchView? = null
-    var toolbar: Toolbar? = null
-    var notesList: ArrayList<DataClass>? = null
+    var notesList: ArrayList<Notes>? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main3)
         hideHomeButton()
         init()
-        setSupportActionBar(toolbar)
+        setSupportActionBar(toolbarMain)
     }
 
     private fun list() {
@@ -110,35 +107,39 @@ class MainActivity : AppCompatActivity(), SearchView.OnCloseListener {
                 val dataClass4 = notesList!![position]
                 if (direction == ItemTouchHelper.LEFT) {
                     val thread4 = Thread(Runnable {
-                        dbHelper!!.deleteData(dataClass4.id.toString())
+                        dbHelper.deleteData(dataClass4.id.toString())
                         readData()
                         val snackbar = Snackbar
                                 .make(coordi, "Item was removed from the list.", Snackbar.LENGTH_LONG)
                         snackbar.setAction("UNDO") {
                             val thread4 = Thread(Runnable {
-                                val db = dbHelper!!.writableDatabase
-                                val contentValues = ContentValues()
-                                contentValues.put(DbHelper.COLUMN_NAME_TITLE, dataClass4.noteName)
-                                contentValues.put(DbHelper.COLUMN_NAME_NOTE, dataClass4.note)
-                                contentValues.put(DbHelper.COLUMN_DATE, dataClass4.date)
-                                contentValues.put(DbHelper.COLUMN_ID, dataClass4.id)
+                                val db = dbHelper.writableDatabase
+                                val contentValues = ContentValues().apply {
+                                    put(DbHelper.COLUMN_NAME_TITLE, dataClass4.noteName)
+                                    put(DbHelper.COLUMN_NAME_NOTE, dataClass4.note)
+                                    put(DbHelper.COLUMN_IMAGE_URI, dataClass4.imageUri)
+                                    put(DbHelper.COLUMN_DATE, dataClass4.date)
+                                    put(DbHelper.COLUMN_ID, dataClass4.id)
+                                }
                                 val id = db.insert(DbHelper.TABLE_NAME, null, contentValues)
                                 Log.d("tag", id.toString())
                                 db.close()
                                 readData()
                             })
                             thread4.start()
-                            recyclerView!!.scrollToPosition(position)
+                            recyclerView.scrollToPosition(position)
                         }
                         snackbar.setActionTextColor(Color.YELLOW)
                         snackbar.show()
                     })
                     thread4.start()
                 } else {
-                    val intent = Intent(this@MainActivity, EditActivity::class.java)
-                    intent.putExtra("note", dataClass4.note)
-                    intent.putExtra("noteName", dataClass4.noteName)
-                    intent.putExtra("id", dataClass4.id)
+                    val intent = Intent(this@MainActivity, EditActivity::class.java).apply {
+                        putExtra("note", dataClass4.note)
+                        if (dataClass4.imageUri != null) putExtra("uri", dataClass4.imageUri)
+                        putExtra("noteName", dataClass4.noteName)
+                        putExtra("id", dataClass4.id)
+                    }
                     startActivity(intent)
                 }
             }
@@ -147,35 +148,37 @@ class MainActivity : AppCompatActivity(), SearchView.OnCloseListener {
     }
 
     private fun init() {
-        val fab = findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener { startActivity(Intent(this@MainActivity, WriteActivity::class.java)) }
-        dataClass = DataClass()
+        notesDataClass = Notes()
         dbHelper = DbHelper(this)
     }
 
     fun readData() {
         notesList = ArrayList()
         val thread2 = Thread(Runnable {
-            val db = dbHelper!!.readableDatabase
+            val db = dbHelper.readableDatabase
             val cursor = db.query(DbHelper.TABLE_NAME, null, null, null,
                     null, null, sortMode)
             while (cursor.moveToNext()) {
-                val noteName = cursor.getString(
+                val noteNameString = cursor.getString(
                         cursor.getColumnIndexOrThrow(DbHelper.COLUMN_NAME_TITLE))
-                val note = cursor.getString(
+                val noteString = cursor.getString(
                         cursor.getColumnIndexOrThrow(DbHelper.COLUMN_NAME_NOTE))
-                val date = cursor.getString(
+                val dateString = cursor.getString(
                         cursor.getColumnIndexOrThrow(DbHelper.COLUMN_DATE))
-                val id = cursor.getLong(cursor.getColumnIndexOrThrow(DbHelper.COLUMN_ID))
-                val dataClass = DataClass()
-                dataClass.noteName = noteName
-                dataClass.note = note
-                dataClass.id = id
-                dataClass.date = date
+                val idLong = cursor.getLong(cursor.getColumnIndexOrThrow(DbHelper.COLUMN_ID))
+                val uriString: String? = cursor.getString(cursor.getColumnIndexOrThrow(DbHelper.COLUMN_IMAGE_URI))
+                val dataClass = Notes().apply {
+                    noteName = noteNameString
+                    note = noteString
+                    id = idLong
+                    date = dateString
+                    imageUri = uriString
+                }
                 Log.d("tag5", dataClass.note)
                 notesList!!.add(dataClass)
             }
-            runOnUiThread { adaptor!!.submitList(notesList) }
+            runOnUiThread { adaptor.submitList(notesList) }
             cursor.close()
             db.close()
         })
@@ -197,8 +200,8 @@ class MainActivity : AppCompatActivity(), SearchView.OnCloseListener {
             override fun onQueryTextChange(newText: String): Boolean {
                 if (newText != null) {
                     val thread3 = Thread(Runnable {
-                        val notesList: MutableList<DataClass> = ArrayList()
-                        val db = dbHelper!!.readableDatabase
+                        val notesList: MutableList<Notes> = ArrayList()
+                        val db = dbHelper.readableDatabase
                         val searchText = "%$newText%"
                         val cursor = db.query(DbHelper.TABLE_NAME, null,
                                 DbHelper.COLUMN_NAME_TITLE + " LIKE ? OR " +
@@ -212,15 +215,15 @@ class MainActivity : AppCompatActivity(), SearchView.OnCloseListener {
                             val date = cursor.getString(
                                     cursor.getColumnIndexOrThrow(DbHelper.COLUMN_DATE))
                             val id = cursor.getLong(cursor.getColumnIndexOrThrow(DbHelper.COLUMN_ID))
-                            val dataClass2 = DataClass()
+                            val dataClass2 = Notes()
                             dataClass2.noteName = noteName
                             dataClass2.date = date
                             dataClass2.note = note
                             dataClass2.id = id
-                            Log.d("tag5", dataClass!!.note)
+                            Log.d("tag5", notesDataClass.note)
                             notesList.add(dataClass2)
                         }
-                        runOnUiThread { adaptor!!.submitList(notesList) }
+                        runOnUiThread { adaptor.submitList(notesList) }
                         cursor.close()
                         db.close()
                     })

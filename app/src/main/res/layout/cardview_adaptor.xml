@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardview_adaptor"
-    android:layout_width="match_parent" android:layout_height="wrap_content"
-    android:layout_margin="10dp">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    app:cardBackgroundColor="#FFFFFF">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="149dp">
+        android:layout_height="wrap_content">
 
+        <ImageView
+            android:id="@+id/noteImageView"
+            android:layout_width="0dp"
+            android:layout_height="300dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/noteName_tv"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/noteName_tv"
@@ -17,18 +28,18 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             android:layout_marginLeft="15dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
             android:layout_marginRight="20dp"
             android:maxLength="20"
             android:maxLines="1"
-            android:text="TextView"
+            android:text="title"
             android:textColor="#000000"
             android:textSize="15sp"
             android:textStyle="italic|bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/noteImageView" />
 
         <TextView
             android:id="@+id/note_tv"
@@ -41,7 +52,7 @@
             android:layout_marginRight="20dp"
             android:maxLength="50"
             android:maxLines="4"
-            android:text="TextView"
+            android:text="note"
             android:textColor="#1D1B1B"
             android:textSize="15sp"
             android:textStyle="italic"
@@ -55,13 +66,13 @@
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_marginLeft="20dp"
+            android:layout_marginTop="50dp"
             android:layout_marginRight="20dp"
             android:background="#8F8E8E"
-            android:layout_marginTop="120dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.39"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/note_tv" />
 
         <TextView
             android:id="@+id/date_tv"
@@ -72,7 +83,7 @@
             android:layout_marginRight="20dp"
             android:layout_marginBottom="5dp"
             android:maxLines="1"
-            android:text="TextView"
+            android:text="date"
             android:textSize="10sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.428"

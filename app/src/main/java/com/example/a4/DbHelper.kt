@@ -20,18 +20,32 @@ class DbHelper(context: Context?) : SQLiteOpenHelper(context, DATABASE_NAME, nul
         db.delete(TABLE_NAME, "$COLUMN_ID=?", arrayOf(id))
     }
 
+    fun updateData(id: Long, noteName: String?, note: String?, date: String?, uri: String?) {
+        val db = writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_ID, id)
+            put(COLUMN_NAME_TITLE, noteName)
+            put(COLUMN_NAME_NOTE, note)
+            put(COLUMN_DATE, date)
+            put(COLUMN_IMAGE_URI, uri)
+        }
+        db.update(TABLE_NAME, contentValues, "id =?", arrayOf(id.toString()))
+    }
+
     fun updateData(id: Long, noteName: String?, note: String?, date: String?) {
         val db = writableDatabase
-        val contentValues = ContentValues()
-        contentValues.put(COLUMN_ID, id)
-        contentValues.put(COLUMN_NAME_TITLE, noteName)
-        contentValues.put(COLUMN_NAME_NOTE, note)
-        contentValues.put(COLUMN_DATE, date)
+        val contentValues = ContentValues().apply {
+            put(COLUMN_ID, id)
+            put(COLUMN_NAME_TITLE, noteName)
+            put(COLUMN_NAME_NOTE, note)
+            put(COLUMN_DATE, date)
+        }
         db.update(TABLE_NAME, contentValues, "id =?", arrayOf(id.toString()))
     }
 
     companion object {
         const val DATABASE_VERSION = 1
+        const val COLUMN_IMAGE_URI = "uri"
         const val DATABASE_NAME = "FeedReader.db"
         const val TABLE_NAME = "note_table"
         const val COLUMN_NAME_TITLE = "title"
@@ -39,9 +53,10 @@ class DbHelper(context: Context?) : SQLiteOpenHelper(context, DATABASE_NAME, nul
         const val COLUMN_DATE = "date"
         const val COLUMN_NAME_NOTE = "note"
         private const val SQL_CREATE_ENTRIES = "CREATE TABLE $TABLE_NAME (" +
-                "$COLUMN_ID INTEGER PRIMARY KEY," +
-                "$COLUMN_DATE TEXT," +
-                "$COLUMN_NAME_TITLE TEXT," +
+                "$COLUMN_ID INTEGER PRIMARY KEY, " +
+                "$COLUMN_DATE TEXT, " +
+                "$COLUMN_IMAGE_URI TEXT, " +
+                "$COLUMN_NAME_TITLE TEXT, " +
                 "$COLUMN_NAME_NOTE TEXT)"
         private const val SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS $TABLE_NAME"
     }

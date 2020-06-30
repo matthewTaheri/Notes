@@ -1,33 +1,31 @@
 package com.example.a4
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_note2.*
+
 
 class NoteActivity : AppCompatActivity() {
     var id: Long = 0
     var dbHelper: DbHelper? = null
-    var collapsingToolbarLayout: CollapsingToolbarLayout? = null
     var noteName: String? = null
     var note: String? = null
     var date: String? = null
+    var uri: String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note2)
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         init()
-    }
-
-    override fun onResume() {
-        super.onResume()
         readData()
     }
 
@@ -48,7 +46,7 @@ class NoteActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun init() {
+    private fun init() {
         val bundle = intent.extras
         if (bundle != null) {
             if (bundle.containsKey("id")) {
@@ -56,18 +54,19 @@ class NoteActivity : AppCompatActivity() {
             }
         }
         dbHelper = DbHelper(this)
-        collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar)
         val fab = findViewById<FloatingActionButton>(R.id.edit_fb)
         fab.setOnClickListener {
-            val intent = Intent(this@NoteActivity, EditActivity::class.java)
-            intent.putExtra("note", note)
-            intent.putExtra("noteName", noteName)
-            intent.putExtra("id", id)
+            val intent = Intent(this@NoteActivity, EditActivity::class.java).apply {
+                putExtra("note", note)
+                putExtra("noteName", noteName)
+                if (uri != null) putExtra("uri", uri)
+                putExtra("id", id)
+            }
             startActivity(intent)
         }
     }
 
-    fun readData() {
+    private fun readData() {
         val thread = Thread(Runnable {
             val db = dbHelper!!.readableDatabase
             val selection = DbHelper.COLUMN_ID + " =?"
@@ -81,9 +80,14 @@ class NoteActivity : AppCompatActivity() {
                         cursor.getColumnIndexOrThrow(DbHelper.COLUMN_NAME_NOTE))
                 date = cursor.getString(
                         cursor.getColumnIndexOrThrow(DbHelper.COLUMN_DATE))
+                uri = cursor.getString(cursor.getColumnIndexOrThrow(DbHelper.COLUMN_IMAGE_URI))
             }
             runOnUiThread {
-                collapsingToolbarLayout!!.title = noteName
+                if (uri != null) {
+                    Picasso.get().load(Uri.parse(uri)).into(header)
+                    header.setImageURI(Uri.parse(uri))
+                }
+                collapsing_toolbar.title = noteName
                 note_textView.text = note
                 note_date_textView.text = date
             }
@@ -92,4 +96,5 @@ class NoteActivity : AppCompatActivity() {
         })
         thread.start()
     }
+
 }
